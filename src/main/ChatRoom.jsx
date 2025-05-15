@@ -1,41 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-
-
-// Use environment variable to allow switching between local and deployed
-const socket = io(process.env.REACT_APP_BACKEND_URL, {
-  transports: ['websocket'], // optional, more stable than polling
-  withCredentials: true,
-});
-
-
 const ChatRoom = () => {
-  const { roomId } = useParams(); // Extract roomId from URL
+  const { roomId } = useParams();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const socketRef = useRef(null); // 👈 store socket in a ref
 
   useEffect(() => {
-    // Join the room using Socket.IO
-    socket.emit('join-room', roomId);
+    // Connect to the backend
+    const backendURL = process.env.REACT_APP_BACKEND_URL;
+    socketRef.current = io(backendURL, {
+      transports: ['websocket'],
+      withCredentials: true,
+    });
 
-    // Listen for incoming messages from the backend
-    socket.on('receive-message', (data) => {
+    // Join the room
+    socketRef.current.emit('join-room', roomId);
+
+    // Listen for incoming messages
+    socketRef.current.on('receive-message', (data) => {
       setMessages((prevMessages) => [...prevMessages, data]);
     });
 
-    // Cleanup listener on unmount
+    // Cleanup on unmount
     return () => {
-      socket.off('receive-message');
+      socketRef.current.disconnect();
     };
   }, [roomId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim()) {
-      // Emit the message to the backend
-      socket.emit('send-message', { roomId, message });
+      socketRef.current.emit('send-message', { roomId, message });
       setMessage('');
     }
   };
