@@ -10,7 +10,7 @@ const ChatRoom = () => {
 
   useEffect(() => {
     // Connect to the backend
-    const backendURL = process.env.REACT_APP_BACKEND_URL;
+    const backendURL = "https://chat-website-backend-cqgc.onrender.com";
     socketRef.current = io(backendURL, {
       transports: ['websocket'],
       withCredentials: true,
