@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-const socket = io(process.env.REACT_APP_BACKEND_URL);
+
+
+// Use environment variable to allow switching between local and deployed
+const socket = io(process.env.REACT_APP_BACKEND_URL, {
+  transports: ['websocket'], // optional, more stable than polling
+  withCredentials: true,
+});
+
 
 const ChatRoom = () => {
   const { roomId } = useParams(); // Extract roomId from URL
